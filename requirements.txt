@@ -1,0 +1,13 @@
+langchain-anthropic
+langgraph
+langchain-core
+arize-phoenix
+arize-phoenix-otel
+openinference-instrumentation-langchain
+ddgs
+streamlit
+pandas
+plotly
+python-dotenv
+rich
+requests
