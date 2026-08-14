@@ -6,29 +6,27 @@ and failures, and canary testing with automatic rollback.
 
 ## Architecture
 
-```
-                    ┌─────────────────────────┐
-  you / eval suite ─▶  LangGraph agent (Claude) │──▶ tools: calculator,
-                    │  src/agent/runner.py      │    web_search, inventory_lookup
-                    └─────────────┬─────────────┘    (deliberately flaky)
-                                  │
-              every call is traced via OpenInference
-                                  │
-                    ┌─────────────▼─────────────┐
-                    │   Arize Phoenix (local)    │  full span waterfall:
-                    │   http://localhost:6006    │  LLM calls, tool calls, latency
-                    └─────────────────────────────┘
-                                  │
-                    ┌─────────────▼─────────────┐
-                    │  data/runs.db (SQLite)     │  latency, tokens, cost,
-                    │  per-run metrics + alerts  │  iteration/loop count, success
-                    └─────────────┬─────────────┘
-                                  │
-                ┌─────────────────┴──────────────────┐
-                ▼                                     ▼
-   Streamlit dashboard                     alerts.py (console + optional
-   (latency, cost, canary,                  Slack webhook) on failure /
-   alerts — streamlit run ...)              loop / latency / cost thresholds
+```mermaid
+flowchart TD
+    User["you / eval suite"] --> Agent["LangGraph agent (Claude)
+src/agent/runner.py"]
+    Agent --> Tools["tools: calculator, web_search,
+inventory_lookup (deliberately flaky)"]
+
+    Agent -. "every call traced via OpenInference" .-> Phoenix["Arize Phoenix (local)
+http://localhost:6006
+full span waterfall: LLM calls, tool calls, latency"]
+
+    Phoenix --> DB[("data/runs.db (SQLite)
+per-run metrics + alerts:
+latency, tokens, cost, loop count, success")]
+
+    DB --> Dashboard["Streamlit dashboard
+latency, cost, canary, alerts
+streamlit run ..."]
+    DB --> Alerts["alerts.py
+console + optional Slack webhook
+on failure / loop / latency / cost thresholds"]
 ```
 
 `config/agent_versions.json` holds two named agent configs — `stable` and
